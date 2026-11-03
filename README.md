@@ -1,394 +1,655 @@
 # ModelForge Studio
+
 ### Build. Train. Test. Understand.
 
-ModelForge Studio is an interactive, browser-based machine-learning workbench built with **Python, Streamlit and scikit-learn**. It brings common decision-tree experimentation tasks into one interface: inspect a dataset, prepare features, train a model, evaluate it, understand its decision logic, make predictions, and export model artefacts.
+**ModelForge Studio** is an interactive machine-learning workbench built with Python, Streamlit and scikit-learn. It gives users one place to explore tabular data, train decision-tree models, evaluate their performance, inspect how a tree makes decisions, generate predictions and export model artefacts.
 
-The repository includes a pre-trained **Weather Prediction** decision-tree model as its first demonstration model. It is an example of how a model can be loaded and explored inside the platform—not a claim that the platform currently supports every machine-learning algorithm or framework.
+The repository includes a pre-trained **Weather Prediction** model as its first working demonstration. Users can explore that model immediately or upload their own CSV dataset and train a new decision tree.
 
-> **Project status:** Early prototype / active development  
-> **Current model family:** scikit-learn Decision Tree Classifier and Decision Tree Regressor  
-> **Application:** Streamlit web application
+> **Project status:** Prototype / early-stage release  
+> **Current training algorithms:** Decision Tree Classifier and Decision Tree Regressor  
+> **Supported training input:** Tabular CSV datasets  
+> **Application framework:** Streamlit
 
 ---
 
 ## Contents
 
-- [What ModelForge Studio does](#what-modelforge-studio-does)
-- [First demonstration model](#first-demonstration-model)
-- [Features and platform pages](#features-and-platform-pages)
-- [How a user works with the platform](#how-a-user-works-with-the-platform)
-- [How model training works](#how-model-training-works)
-- [Supported datasets and input data](#supported-datasets-and-input-data)
-- [Project structure](#project-structure)
-- [Technology stack](#technology-stack)
-- [Run the project locally](#run-the-project-locally)
-- [Deploy on Streamlit Community Cloud](#deploy-on-streamlit-community-cloud)
-- [How the code is organised](#how-the-code-is-organised)
-- [Model import and export](#model-import-and-export)
-- [Evaluation metrics](#evaluation-metrics)
-- [Important limitations](#important-limitations)
-- [Security and responsible use](#security-and-responsible-use)
-- [Troubleshooting](#troubleshooting)
-- [Development and contribution](#development-and-contribution)
-- [License](#license)
+- [1. Overview](#1-overview)
+- [2. First included model: Weather Prediction](#2-first-included-model-weather-prediction)
+- [3. Platform features](#3-platform-features)
+- [4. Getting started as a user](#4-getting-started-as-a-user)
+- [5. Train a model with your own dataset](#5-train-a-model-with-your-own-dataset)
+- [6. Understand the training workflow](#6-understand-the-training-workflow)
+- [7. Dataset requirements and preparation](#7-dataset-requirements-and-preparation)
+- [8. Model evaluation and metrics](#8-model-evaluation-and-metrics)
+- [9. Model import, export and model cards](#9-model-import-export-and-model-cards)
+- [10. Project structure](#10-project-structure)
+- [11. Codebase guide](#11-codebase-guide)
+- [12. Technology stack](#12-technology-stack)
+- [13. Installation and local setup](#13-installation-and-local-setup)
+- [14. Deploy on Streamlit Community Cloud](#14-deploy-on-streamlit-community-cloud)
+- [15. Configuration](#15-configuration)
+- [16. Limitations and current scope](#16-limitations-and-current-scope)
+- [17. Security and responsible use](#17-security-and-responsible-use)
+- [18. Troubleshooting](#18-troubleshooting)
+- [19. Development and contribution](#19-development-and-contribution)
+- [20. License](#20-license)
 
 ---
 
-## What ModelForge Studio does
+## 1. Overview
 
-ModelForge Studio is designed for learners, students, developers and data practitioners who want a practical interface for experimenting with tabular datasets and decision-tree models.
+Machine-learning experimentation often involves switching between notebooks, scripts, charts and model files. ModelForge Studio brings several common steps into a single interactive application.
 
-A user can:
+With the current version, a user can:
 
-1. Load the built-in sample weather dataset or upload a CSV file.
-2. Inspect rows, columns, missing values and duplicate rows.
-3. Choose the value to predict (the target) and the input columns (features).
-4. Choose classification or regression, or allow the application to infer a task from the target column.
-5. Configure decision-tree training settings.
-6. Train a model using a training/test split.
-7. Review model scores and possible overfitting.
+1. Open the included Weather Prediction model and try it without first training a model.
+2. Upload a CSV dataset.
+3. Inspect the dataset and apply basic cleaning operations.
+4. Select the target column and input features.
+5. choose a classification or regression task.
+6. Configure decision-tree hyperparameters.
+7. Train a model and compare training and held-out test performance.
 8. Explore feature importance, tree structure and decision paths.
-9. Enter feature values and request a prediction.
-10. Import or export a supported decision-tree model and download a model card or report.
+9. Enter new feature values and generate predictions.
+10. Evaluate a model on a separate labelled CSV.
+11. Export a trained model, its JSON model card and a Markdown report.
 
-The application is currently focused on **tabular supervised learning with decision trees**. The name describes the intended platform direction; it should not be interpreted as support for arbitrary neural networks, deep-learning models, or every algorithm in scikit-learn.
+ModelForge Studio is intended as a practical learning and experimentation environment. It is not currently a universal AutoML service or a production model-hosting platform.
 
 ---
 
-## First demonstration model
+## 2. First included model: Weather Prediction
 
 ### Model 001 — Weather Prediction
 
-The repository ships with `model.pkl`, a pre-trained model used to demonstrate the model-loading and prediction experience.
+The repository includes `model.pkl`, a pre-trained scikit-learn decision-tree model. It is loaded automatically when the application starts, provided the file is present and compatible with the installed dependencies.
 
-| Property | Details |
+| Item | Description |
 |---|---|
-| Display name | Weather Prediction |
+| Demonstration model | Weather Prediction |
 | Model family | Decision Tree |
+| Task expected by the Weather Forecast page | Regression |
+| Prediction shown | Temperature estimate |
+| Display unit | °C |
+| Model file | `model.pkl` |
 | Framework | scikit-learn |
-| Artefact | `model.pkl` |
-| Role | First pre-trained demonstration model |
-| Main use in the app | Load a trained tree, inspect its structure and make predictions |
+| Purpose | Demonstrate loading, prediction, tree exploration and model analytics |
 
-The application attempts to load `model.pkl` from the project root. It also checks `models/model.pkl` as an alternate location. If neither file is available or the model cannot be loaded, the app creates a fallback demonstration model using generated synthetic weather data.
+The Weather Forecast page provides six atmospheric input controls, preset conditions and a prediction workflow. After a forecast is run, users can inspect the decision path and explore a what-if chart by varying one numeric input while keeping the other inputs fixed.
 
-**Important:** The code currently labels the shipped model's regression target as `Temperature` with unit `°C` when loading it. Confirm the model's original training dataset, exact feature meanings, target definition, training procedure and independent test performance before treating it as a scientifically validated weather forecast model. The fallback dataset is synthetic and is intended for demonstration and experimentation, not operational forecasting.
+**Model interpretation note:** The application assigns the bundled model the target label `Temperature` and unit `°C`. The original data provenance, feature definitions, measurement units and independent real-world validation should be checked before interpreting the output as an operational weather forecast. A prediction from this prototype should be treated as an educational demonstration, not an authoritative meteorological forecast.
+
+If the bundled model is missing or cannot be loaded, the app falls back to a demonstration model generated from synthetic weather data. Synthetic data is for demonstrating the workflow; it is not real-world evidence.
+
+The bundled model is described in the project as a deep/unpruned tree. Users can train a new tree with a depth limit and other regularisation settings in Train Studio.
 
 ---
 
-## Features and platform pages
+## 3. Platform features
 
-The app presents the following pages in its navigation.
+The application has eight pages. The active model can be switched in the sidebar between **Pre-trained model** and **My trained model**.
 
-### 1. Weather forecast
+### 3.1 Weather Forecast
 
-A model-specific demonstration page for the bundled weather regression model.
+A focused demonstration of the included weather regression model.
 
-- Presents input controls for the model's features.
-- Provides cool-day, typical-day and warm-day presets based on feature statistics.
-- Runs the loaded model to estimate its target value.
-- Displays temperature bands and general illustrative guidance.
-- Shows the decision path taken through the tree.
-- Includes a what-if view that varies one numeric input while keeping the other inputs fixed.
+- Accepts six atmospheric readings through input controls.
+- Provides Cool day, Typical day and Warm day presets.
+- Runs the active pre-trained model to estimate temperature.
+- Displays a temperature band and illustrative guidance.
+- Shows the decision path followed through the tree.
+- Includes a what-if chart for changing one numeric input.
+- Allows the user to adjust the temperature-band thresholds used for the guidance display.
 
-This page expects the default model to be a **regressor**. If the loaded default model is a classifier, the page displays a message directing the user to the Prediction Center instead.
+The page expects the default model to be a regression tree. If the loaded model is a classifier, the app explains that the user should use Prediction Center for that model instead.
 
-### 2. Train studio
+### 3.2 Train Studio
 
-The main workspace for training a model from a dataset.
+The main workspace for creating a model from a user's own data.
 
-- Starts with the built-in sample weather dataset or accepts a user-uploaded CSV.
-- Displays a data preview and basic dataset counts.
-- Offers simple cleaning actions:
+- Starts with the built-in synthetic sample weather dataset or accepts a CSV upload.
+- Displays a data preview, row count, column count, missing-value count and duplicate-row count.
+- Offers basic cleaning actions:
   - Drop rows with missing values.
-  - Fill numeric gaps with the median.
+  - Fill numeric missing values with their column median.
   - Remove duplicate rows.
-- Lets the user select a target column and input features.
-- Offers automatic task detection, classification and regression choices.
-- Provides decision-tree settings such as maximum depth, minimum samples per leaf, minimum samples to split, split criterion and pruning strength.
-- Can sweep tree depths and suggest a depth based on held-out test score.
-- Trains and activates a model in the current Streamlit session.
-- Shows training and test scores and a basic overfitting warning.
+- Lets the user choose a target column and input features.
+- Offers Auto-detect, Regression and Classification task choices.
+- Provides tree settings including maximum depth, minimum samples per leaf, minimum samples to split, split criterion and pruning strength (`ccp_alpha`).
+- Can compare different tree depths and suggest a depth using the held-out test score.
+- Trains and activates the new model for the current session.
+- Shows training and test scores, tree size and a basic overfitting warning.
 
-**Data handling note:** The training preparation step drops rows with missing values in the selected target and feature columns. The median-fill button is a separate cleaning action for numeric columns; it is not an automatic imputation pipeline embedded in the trained model.
+### 3.3 Model Analytics
 
-### 3. Model analytics
+A workspace for reviewing the active model and testing it against labelled data.
 
-The analytics page helps the user inspect a model's structure and evaluate it.
+Depending on task and available data, the page can show:
 
-- Shows tree depth, number of leaves and leaf-size information.
-- Estimates overfitting risk from tree structure.
-- Accepts an evaluation CSV containing the model's feature columns and a true target column.
-- Calculates task-appropriate evaluation metrics.
-- Displays actual-versus-predicted and residual plots for regression.
-- Displays a confusion matrix and classification metrics for classification.
-- Offers five-fold cross-validation when the model's training data is available in the current session.
+- Regression metrics and actual-versus-predicted / residual visualisations.
+- Classification metrics and a confusion matrix.
+- Evaluation using a user-uploaded CSV containing the required features and true target.
+- Five-fold cross-validation for models trained in the current session, when the stored training data is available.
+- A learning-curve view to help compare training and validation behaviour.
 
-For an imported model, the original training dataset is not included in the pickle by this application. Consequently, cross-validation may not be available. The user can provide a separate labelled evaluation CSV to score the imported model.
+An imported model does not automatically contain its original training dataset. Cross-validation and learning-curve analysis that require original training data may therefore be unavailable for imported models. A separate labelled evaluation CSV can still be supplied when its columns match the model's expected inputs and target.
 
-### 4. Tree explorer
+### 3.4 Tree Explorer
 
-A visual explanation page for the active decision tree.
+A visual explanation area for the active decision tree.
 
 - Shows tree depth, leaf count and median leaf size.
-- Ranks feature importance.
-- Displays a tree diagram with a selectable number of levels.
-- Plots the distribution of training records across leaves.
-- Shows a text version of the tree rules at a selected depth.
-- Displays a structural overfitting-risk indicator.
+- Ranks the model's feature importances.
+- Displays a decision-tree diagram with a selectable display depth.
+- Visualises how training records are distributed across leaves.
+- Displays readable text rules from the tree.
+- Provides a structural overfitting-risk indicator.
 
-Feature importance is the tree model's impurity-based importance. It is useful for exploring the fitted tree, but it is not proof of causation and can be misleading when features are correlated or have different measurement characteristics.
+Feature importance is based on the fitted tree's impurity reduction. It describes how the model used features; it does not establish causation or prove that a feature is important outside this particular fitted model.
 
-### 5. Prediction center
+### 3.5 Prediction Center
 
-A general prediction interface for the active supported decision-tree model.
+A general single-record prediction interface for the active supported decision-tree model.
 
-- Creates an input control for each model feature.
-- Accepts values for a single prediction.
+- Builds input controls from the model's feature metadata.
+- Accepts values for one prediction.
 - Displays a predicted class or numeric value.
-- For classification, displays class probabilities when available.
-- Shows the sequence of tree decisions leading to the prediction.
+- Displays class probabilities when available for classification.
+- Shows the decision path through the tree.
 - Warns when numeric inputs fall outside ranges inferred from the model's split thresholds.
 
-The range warning is an indicator, not a guarantee that a prediction is valid or invalid.
+An out-of-range warning is a diagnostic hint, not a guarantee that a prediction is invalid.
 
-### 6. Model hub
+### 3.6 Model Hub
 
-The model exchange area for the active model.
+The place to import and export supported models.
 
-- Downloads the active decision tree as a `.pkl` file.
-- Downloads a JSON model card containing model metadata, feature information, hyperparameters and available metrics.
-- Accepts `.pkl` and `.joblib` model files for import.
-- Checks that the loaded object is a supported scikit-learn decision-tree classifier or regressor.
-- Displays the scikit-learn version used by the running app.
+- Downloads the active estimator as a `.pkl` file.
+- Downloads a JSON model card containing model metadata.
+- Accepts `.pkl` and `.joblib` uploads.
+- Checks that an imported estimator is a supported scikit-learn decision-tree classifier or regressor.
+- Shows the scikit-learn version used by the running application.
 
-Only import pickle/joblib files from sources you trust. Loading these formats can execute arbitrary code.
+Only import model files from trusted sources. Pickle/joblib loading can execute code.
 
-### 7. Data explorer
+### 3.7 Data Explorer
 
-A visual exploration page for the current working dataset.
+Exploratory visualisations for the current working dataset.
 
-- Correlation heatmap for numeric columns.
-- Histograms and box plots for selected columns.
-- Two-dimensional scatter plots with optional colour grouping.
-- Optional linear trend line for uncoloured numeric relationships.
+- Numeric correlation heatmap.
+- Histograms and box plots.
+- Two-dimensional scatter plots.
+- Optional colour grouping.
+- Optional linear trend line for suitable numeric relationships.
 - Three-dimensional scatter plot when at least three numeric columns are available.
-- Missing-value counts and visualisation.
+- Missing-value overview.
 
-The current working dataset is the sample dataset or the CSV selected in Train Studio. The explorer does not automatically perform advanced statistical inference or data validation.
+The working dataset is the sample dataset or the CSV currently selected in Train Studio. Data Explorer is descriptive; it does not automatically establish statistical significance or causal relationships.
 
-### 8. Report
+### 3.8 Report
 
 Creates a downloadable Markdown report for the active model.
 
 The report can include:
 
 - Model source, task and target.
-- Input features and number of training rows.
-- Tree depth, leaves and median leaf size.
+- Input feature names and training-row count.
+- Tree depth, number of leaves and median leaf size.
 - Structural overfitting-risk estimate.
-- Evaluation metrics, if evaluation data is available.
+- Evaluation metrics, when evaluation data is available.
 - Feature-importance values.
 - Model hyperparameters.
 
 ---
 
-## How a user works with the platform
+## 4. Getting started as a user
 
-A typical workflow is:
+You do not need to train a model before trying the application.
 
-### A. Start with the pre-trained model
+### Explore the included model
 
-1. Launch ModelForge Studio.
-2. Keep **Pre-trained model** selected in the sidebar.
-3. Open Model Hub to review the active model and download its model card.
-4. Open Prediction Center to enter feature values and run a prediction.
-5. Open Tree Explorer to inspect how the model makes decisions.
-6. Open Model Analytics to review its structure or provide labelled evaluation data.
+1. Start ModelForge Studio.
+2. In the sidebar, keep **Pre-trained model** selected.
+3. Open **Weather Forecast**.
+4. Enter the atmospheric readings or choose one of the presets.
+5. Click **Run forecast**.
+6. Review the estimated temperature and guidance.
+7. Open the **Decision path** tab to see the tree decisions.
+8. Open the **What-if** tab to see how changing one input affects the tree's output.
+9. Visit **Tree Explorer**, **Model Analytics**, **Prediction Center** and **Model Hub** to explore other model tools.
 
-### B. Train a model using your own CSV
+### Switch between models
 
-1. Open **Train studio**.
-2. Select **Upload CSV** and upload a dataset.
-3. Inspect the preview, missing-value count and duplicate-row count.
-4. Apply the available cleaning actions if needed.
-5. Select the **target** column—the value the model should learn to predict.
-6. Select the **input features**—the columns the model will use to make its prediction.
-7. Choose Auto-detect, Regression or Classification.
-8. Configure the tree settings.
-9. Optionally select **Suggest a depth** and review the training/test score chart.
-10. Select **Train model**.
-11. The newly trained model becomes the active **My trained model** model for the current session.
+The sidebar's **Active model** selector switches between:
 
-### C. Inspect and use the trained model
+- **Pre-trained model** — the bundled demonstration model.
+- **My trained model** — a model trained or imported during the current session.
 
-1. Open Model Analytics to review scores and possible overfitting.
-2. Open Tree Explorer to inspect feature importance and tree rules.
-3. Open Prediction Center to test an individual input.
-4. Open Model Hub to export the model and its JSON model card.
-5. Open Report to download a Markdown summary.
-
-### D. Evaluate an imported model
-
-1. Import a supported `.pkl` or `.joblib` decision tree in Model Hub.
-2. Activate the imported model.
-3. Open Model Analytics.
-4. Upload a labelled CSV with all required feature columns and the true target column.
-5. Select the true target column and run evaluation.
+Train a model in Train Studio or import one in Model Hub before selecting My trained model.
 
 ---
 
-## How model training works
+## 5. Train a model with your own dataset
 
-The current training workflow is implemented in `core.py`.
+This is the main workflow for users who want to experiment with their own data.
 
-### 1. Select columns
+### Step 1 — Prepare a CSV
 
-The user selects one target column and one or more feature columns. The target is removed from the input feature list if it is also selected there.
+Prepare a tabular CSV file with column headers. Include the value you want to predict and the input columns that may help predict it.
 
-### 2. Prepare rows and features
+Example structure:
 
-The current preparation code:
+| Hours_Studied | Attendance | Practice_Tests | Final_Score |
+|---:|---:|---:|---:|
+| 2 | 70 | 1 | 48 |
+| 4 | 82 | 3 | 66 |
+| 6 | 90 | 5 | 84 |
+| 3 | 75 | 2 | 55 |
+
+In this example, `Final_Score` could be the target and the other columns could be the features. This is only an illustrative example, not a dataset shipped with the project.
+
+### Step 2 — Upload the CSV
+
+1. Open **Train Studio**.
+2. Under Dataset, select **Upload CSV**.
+3. Choose your `.csv` file.
+4. Review the preview and dataset statistics.
+
+### Step 3 — Clean the data
+
+Use the available cleaning controls if appropriate:
+
+- **Drop rows with missing values** removes rows containing missing cells.
+- **Fill numeric gaps with the median** fills missing numeric values using each numeric column's median.
+- **Remove duplicate rows** removes duplicate records.
+
+These actions update the working dataset in the current session. Review the result before training. The training preparation function also drops rows that have missing values in the selected target or selected feature columns.
+
+### Step 4 — Select the target and features
+
+- **Target to predict:** the column the model should learn to predict.
+- **Input features:** the columns the model can use to make its prediction.
+
+Do not include information that would only be known after the target outcome occurs. Avoid leakage columns such as a final result copied into an input field.
+
+### Step 5 — Select the task
+
+Choose one of:
+
+- **Auto-detect**
+- **Regression**
+- **Classification**
+
+Auto-detection is a heuristic based on the target column's data type and number of distinct values. Review the detected task and override it if necessary.
+
+### Step 6 — Configure the decision tree
+
+The available settings include:
+
+| Setting | What it controls |
+|---|---|
+| Unlimited depth | Allows the tree to grow without a configured maximum depth |
+| Max depth | Maximum number of split levels |
+| Held out for testing (%) | Portion of data reserved for a test split |
+| Min samples per leaf | Minimum training records required in a leaf |
+| Min samples to split | Minimum records required before a node can split |
+| Split criterion | Measure used to choose a split |
+| Pruning strength (`ccp_alpha`) | Cost-complexity pruning parameter; larger values apply stronger pruning |
+
+Classification criteria include Gini, entropy and log loss. Regression criteria include squared error and Friedman MSE.
+
+### Step 7 — Suggest a depth (optional)
+
+Click **Suggest a depth** to train and compare trees at different depths using the current prepared dataset and test split. Review the training and test score chart and use the suggested depth if it is suitable.
+
+A suggested depth is a convenience, not a guarantee of optimal generalisation. It should be validated on data appropriate to the real task.
+
+### Step 8 — Train
+
+Click **Train model**. The app prepares the selected data, fits the decision tree and activates the result as **My trained model** for the current session.
+
+### Step 9 — Explore the result
+
+- **Model Analytics:** review test performance and overfitting indicators.
+- **Tree Explorer:** inspect splits, rules and feature importance.
+- **Prediction Center:** enter a new record and request a prediction.
+- **Model Hub:** download the estimator and model card.
+- **Report:** download a Markdown report.
+
+---
+
+## 6. Understand the training workflow
+
+The primary data preparation and model operations are implemented in `core.py`.
+
+### 6.1 Column selection
+
+The user chooses one target column and one or more feature columns. The target is not used as an input feature.
+
+### 6.2 Missing values and data types
+
+The preparation workflow:
 
 - Selects the target and chosen feature columns.
-- Drops rows containing missing values in those selected columns.
-- Converts boolean feature columns to integers.
+- Removes rows with missing values in those selected columns.
+- Converts boolean features to integer values.
 - Treats non-numeric feature columns as categorical.
 - Converts categorical values to strings.
-- One-hot encodes categorical feature columns using pandas.
-- Records numeric feature ranges and categorical values for later input handling.
+- One-hot encodes categorical features using pandas.
+- Stores feature metadata used by the app to construct prediction inputs.
 
-The resulting encoded feature matrix is used to fit the decision tree.
+The median-fill control is a separate user-triggered dataset-cleaning action. It is not a fitted imputation pipeline automatically packaged with the exported estimator.
 
-### 3. Determine the task
+### 6.3 Task detection
 
-The application can infer the task from the target column:
+The automatic task detector uses a simple heuristic:
 
 - Non-numeric or boolean targets are treated as classification.
-- Numeric targets containing integer-like values and no more than 10 unique values are treated as classification.
+- Numeric targets with integer-like values and no more than 10 unique values are treated as classification.
 - Other numeric targets are treated as regression.
 
-The user can override automatic detection in Train Studio. Regression requires a numeric target. Classification targets are label-encoded for model training.
+This heuristic may not match the meaning of every dataset. For example, category IDs stored as numbers may need classification, while a numeric quantity with few observed values may still be a regression problem. Select the task deliberately when needed.
 
-Automatic detection is a heuristic. Review the selected task before training, especially when a numeric target represents category codes.
+### 6.4 Encoding
 
-### 4. Split the data
+Categorical input features are one-hot encoded. Classification target labels are encoded for fitting and translated back for presentation where the app has the relevant class metadata.
 
-The code uses `train_test_split` with a fixed random seed (`42`) and a user-selected test percentage. For classification, it attempts to stratify the split when every class has at least two examples.
+### 6.5 Train/test split
 
-At least 30 complete rows are required by the current preparation function.
+The application uses scikit-learn's `train_test_split` with a fixed random seed of `42` and the test percentage selected by the user. For classification, it attempts to stratify the split when the class counts allow it.
 
-### 5. Fit the decision tree
+The current preparation function requires at least 30 usable rows after selected-column missing rows are removed.
 
-The platform fits one of:
+### 6.6 Model fitting
+
+The application fits one of the following:
 
 - `DecisionTreeClassifier` for classification.
 - `DecisionTreeRegressor` for regression.
 
-The model is created with a fixed random seed and the selected tree parameters.
+The model is fitted using the configured tree hyperparameters.
 
-### 6. Review performance
+### 6.7 Performance review
 
-The training page reports:
+The Train Studio page shows training and held-out test scores, tree structure information and a basic train/test gap warning. A large gap can indicate overfitting.
 
-- Training accuracy for classification or training R² for regression.
-- Held-out test accuracy for classification or held-out test R² for regression.
-- Tree depth and leaf counts.
-- A simple warning when the training score is substantially higher than the test score.
-
-These scores are useful diagnostics, but a single train/test split does not establish that a model will generalise to every real-world dataset.
+A single random split is only one estimate of performance. It does not guarantee that the model will perform similarly on future, unseen or differently distributed data.
 
 ---
 
-## Supported datasets and input data
+## 7. Dataset requirements and preparation
 
-### Dataset file type
+### Accepted file type
 
-- CSV (`.csv`) for training and evaluation uploads.
+- CSV (`.csv`) for the training and evaluation upload workflows.
 
-### Practical dataset expectations
+### Recommended dataset format
 
-For the current workflow:
-
-- Include a header row with column names.
+- Include a header row with unique, meaningful column names.
 - Include one target column.
-- Include at least one usable feature column.
-- Provide at least 30 complete rows after selected-column missing rows are removed.
-- Use numeric targets for regression.
-- Ensure the evaluation CSV contains the feature columns expected by the model plus a column with the true target values.
-- Keep feature names and meanings consistent between training, evaluation and prediction.
+- Include at least one input feature.
+- Provide at least 30 usable rows after selected-column missing rows are removed.
+- Use a numeric target for regression.
+- For classification, provide at least two target classes with enough examples for a train/test split.
+- Keep feature names, units, meanings and data types consistent between training and later evaluation or prediction.
 
-### Categorical columns
+### Categorical values
 
-Non-numeric feature columns are converted to categorical string values and one-hot encoded during training. The application stores the observed category values in the active model bundle so it can build the corresponding encoded input columns for predictions in that session.
+Non-numeric feature columns are treated as categorical and one-hot encoded during training. The app records category metadata for its own prediction workflow.
 
-The current import format accepts a raw scikit-learn decision tree and infers its feature names from `feature_names_in_` when available. It does not restore the full preprocessing history of an arbitrary external pipeline. For reliable reuse, imported models should be compatible with the app's expected feature representation.
+For imported external estimators, the app does not reconstruct an arbitrary external preprocessing pipeline. An estimator trained on one-hot encoded or otherwise transformed data may require exactly compatible input preparation. A plain decision-tree estimator alone does not necessarily contain all preprocessing steps used before it was fitted.
 
-### Large datasets
+### Evaluation CSV
 
-The app loads uploaded CSV data into memory using pandas. Very large files may require substantial memory and may be slow to process. There is no current streaming or distributed-training workflow.
+For evaluation, upload a labelled CSV containing:
+
+- Every feature column required by the active model.
+- The true target column to compare with predictions.
+
+The evaluation columns must match the model's expected feature representation and semantics. Evaluation data should be separate from the data used to fit the model whenever possible.
+
+### Dataset size
+
+Uploaded CSV files are loaded into memory using pandas. Very large files may take longer to load and train and may require substantial memory. The current application does not provide distributed or streaming training.
 
 ---
 
-## Project structure
+## 8. Model evaluation and metrics
+
+The available metrics depend on the model task.
+
+### Regression metrics
+
+| Metric | Interpretation |
+|---|---|
+| R² | Compares the model with a baseline that predicts the mean target value. Can be negative if the model performs worse than that baseline. |
+| RMSE | Root mean squared error; larger errors have greater influence. |
+| MAE | Mean absolute error in the target's units. |
+| Median absolute error | Median absolute difference between predictions and true values. |
+
+### Classification metrics
+
+| Metric | Interpretation |
+|---|---|
+| Accuracy | Fraction of evaluated predictions that are correct. |
+| Weighted precision | Class precision averaged with class support as weights. |
+| Weighted recall | Class recall averaged with class support as weights. |
+| Weighted F1 | Weighted average of class-level F1 scores. |
+| Confusion matrix | Counts correct and incorrect predictions by actual and predicted class. |
+| ROC AUC | Shown when the applicable probability outputs and classification setup support its calculation. |
+
+### Cross-validation and learning curves
+
+The app can perform five-fold cross-validation for a model trained in the current session when its training data is available. Imported models generally do not include the original training data in this application's model bundle, so those analyses may not be available.
+
+Do not use the same data for training and final evaluation and then describe the result as independent test performance.
+
+---
+
+## 9. Model import, export and model cards
+
+### Export a model
+
+1. Select the model you want in the sidebar.
+2. Open **Model Hub**.
+3. Under Export, choose **Download model (.pkl)**.
+4. Optionally choose **Download model card (.json)**.
+
+The `.pkl` file stores the estimator. The JSON model card is a readable description of the model and is not itself executable or a replacement for the estimator.
+
+### Model card contents
+
+The model card can record:
+
+- Model source and creation timestamp.
+- scikit-learn version.
+- Task and target.
+- Raw feature names and class names, where applicable.
+- Numeric feature ranges and categorical values.
+- Model hyperparameters.
+- Tree depth, leaf count and training-row count.
+- Selected evaluation metrics, when available.
+
+### Import a model
+
+1. Open **Model Hub**.
+2. Under Import, select a `.pkl` or `.joblib` file.
+3. Click **Activate imported model**.
+4. If loading succeeds, the model becomes available as **My trained model**.
+5. Supply labelled evaluation data in Model Analytics if you want to score it on a separate dataset.
+
+### Supported imported estimators
+
+The importer accepts scikit-learn:
+
+- `DecisionTreeClassifier`
+- `DecisionTreeRegressor`
+
+It does not currently provide universal import support for arbitrary scikit-learn estimators, full preprocessing pipelines, TensorFlow/Keras, PyTorch, XGBoost, LightGBM, CatBoost, ONNX or custom model formats.
+
+### Version compatibility
+
+The bundled model was saved with **scikit-learn 1.6.1**. The repository pins that version in `requirements.txt`. Persisted scikit-learn models are not guaranteed to be compatible across library versions; use the pinned environment when possible.
+
+---
+
+## 10. Project structure
 
 ```text
 modelforge-studio/
 │
-├── app.py                  # Streamlit interface, pages, navigation and session workflow
-├── core.py                 # Dataset preparation, training, evaluation and tree utilities
-├── theme.py                # Visual styling, reusable UI helpers and Plotly theme
-├── model.pkl               # Bundled pre-trained demonstration model
-├── requirements.txt        # Python package dependencies
-├── README.md               # Project documentation
-├── .gitignore              # Files excluded from version control
+├── .streamlit/
+│   └── config.toml       # Streamlit theme, toolbar, upload and browser settings
 │
-└── .streamlit/
-    └── config.toml         # Streamlit application theme/configuration
+├── app.py                # Streamlit application entry point and page UI
+├── core.py               # Data preparation, model training and evaluation logic
+├── theme.py              # CSS, reusable UI components and Plotly theme
+├── model.pkl             # Pre-trained Weather Prediction model
+├── requirements.txt      # Python dependencies
+├── README.md             # Project documentation
+├── LICENSE               # MIT license
+└── .gitignore             # Files excluded from Git
 ```
 
-The `.streamlit/config.toml` file is optional for core functionality but provides the repository's Streamlit theme configuration. Keep it at the project root under the `.streamlit` directory.
+Keep `model.pkl` in the same directory as `app.py`, or in the supported `models/model.pkl` location. Keep the `.streamlit` directory at the repository root.
 
 ---
 
-## Technology stack
+## 11. Codebase guide
 
-| Technology | Role |
+### `app.py` — application and interface
+
+This is the Streamlit entry point. It is responsible for:
+
+- Page configuration and navigation.
+- Sidebar branding and active-model selection.
+- Streamlit session state.
+- Dataset upload and cleaning controls.
+- Training configuration and user actions.
+- Calling machine-learning functions from `core.py`.
+- Rendering metrics, charts, tables, forms and downloads.
+- Connecting the eight application pages.
+
+Main page functions:
+
+| Function | Responsibility |
 |---|---|
-| Python | Main programming language |
-| Streamlit | Interactive web application and user interface |
-| scikit-learn | Decision-tree models, data splitting and evaluation |
-| pandas | CSV loading, tabular data preparation and analysis |
-| NumPy | Numeric operations and data handling |
+| `page_forecast()` | Weather model forecast, guidance, decision path and what-if view |
+| `page_train()` | Dataset upload, cleaning, feature selection, configuration and training |
+| `page_analytics()` | Model metrics, external evaluation and generalisation analysis |
+| `page_tree()` | Tree profile, feature importance, diagram and text rules |
+| `page_predict()` | Single-record prediction and decision path |
+| `page_hub()` | Model import, export and compatibility information |
+| `page_explore()` | Dataset exploration charts |
+| `page_report()` | Download and preview the model report |
+
+Other helpers manage chart rendering, tables, page navigation, notifications, model selection and prediction input controls.
+
+### `core.py` — machine-learning and data layer
+
+This module contains the core data and model operations, separate from the Streamlit page layout.
+
+Important functions include:
+
+| Function | Responsibility |
+|---|---|
+| `sample_weather_df()` | Creates the built-in synthetic weather dataset |
+| `detect_task()` | Suggests classification or regression from the target column |
+| `prepare_dataset()` | Selects columns, handles selected data types, encodes features and splits data |
+| `fit_bundle()` | Fits a decision-tree model and packages model/session metadata |
+| `demo_bundle()` | Builds the fallback demonstration model when the bundled model cannot be loaded |
+| `bundle_from_model()` | Creates the application's metadata bundle around a supported imported tree |
+| `load_model_file()` | Loads a trusted pickle/joblib decision-tree estimator |
+| `evaluate()` | Calculates task-specific evaluation metrics |
+| `attach_evaluation()` | Prepares user-supplied labelled evaluation data |
+| `depth_sweep()` | Compares models trained with different maximum depths |
+| `recommend_depth()` | Suggests a depth from the sweep results |
+| `cv_report()` | Runs cross-validation when training data is available |
+| `tree_profile()` | Calculates tree depth, leaves and structural information |
+| `leaf_info()` | Inspects the leaf reached by an input |
+| `decision_path_rows()` | Converts a tree decision path into readable rows |
+| `tree_figure()` | Builds a visual decision-tree diagram |
+| `encode_frame()` | Converts raw prediction inputs into the model's expected feature representation |
+| `out_of_range()` | Checks numeric inputs against inferred feature ranges |
+| `what_if_curve()` | Calculates predictions while varying one input |
+| `model_bytes()` | Serialises a model for download |
+| `model_card()` | Builds model metadata for JSON export |
+| `build_report()` | Creates a Markdown model report |
+| `card_json()` | Serialises a model card as formatted JSON |
+
+### `theme.py` — design system and reusable components
+
+This module provides the visual presentation layer:
+
+- Colour palette and typography settings.
+- CSS for the page canvas, sidebar, buttons, tabs, metrics and responsive layout.
+- Animated weather/forecast hero component.
+- Reusable page headers, metric strips, guidance rows and callouts.
+- HTML escaping and rendering helpers.
+- Streamlit widget width compatibility helpers.
+- Plotly chart template registration.
+
+The design uses a light interface with blue/cobalt and teal accents, subtle borders and responsive layouts. Motion is reduced when the user's operating-system preference requests reduced motion.
+
+### `model.pkl` — pre-trained model artefact
+
+A binary serialised scikit-learn decision-tree model used by the first demonstration workflow. It is not Python source code. Keep it in the expected path and use the pinned dependency version.
+
+### `requirements.txt` — dependencies
+
+Lists the Python packages needed to run the application. The scikit-learn version is pinned to match the bundled model.
+
+### `.streamlit/config.toml` — Streamlit configuration
+
+The repository configuration sets the light theme, primary and background colours, minimal toolbar mode, maximum upload size and disables browser usage-stat collection.
+
+---
+
+## 12. Technology stack
+
+| Technology | Use in this project |
+|---|---|
+| Python | Application and model logic |
+| Streamlit | Interactive browser-based interface |
+| scikit-learn | Decision-tree models, data splitting, preprocessing utilities and metrics |
+| pandas | CSV loading, data cleaning and tabular operations |
+| NumPy | Numerical operations |
 | Plotly | Interactive charts and visualisations |
 | joblib | Serialising and loading model artefacts |
 
-Dependencies are listed in `requirements.txt`. The repository pins **scikit-learn 1.6.1** because the bundled model was saved with that version. Model persistence across different scikit-learn versions is not guaranteed.
+The dependency versions/ranges are maintained in `requirements.txt`.
 
 ---
 
-## Run the project locally
+## 13. Installation and local setup
 
-### Requirements
+### Prerequisites
 
-- Python 3.10 or 3.11 is recommended for the supplied environment.
+- Python **3.10–3.13** is the documented supported range for this project.
 - `pip`
-- Internet access for the initial dependency installation.
+- Git (optional, if cloning the repository).
+- Internet access for installing packages.
 
-### 1. Download the repository
-
-Clone it:
+### Option A — Clone with Git
 
 ```bash
-git clone https://github.com/YOUR-USERNAME/modelforge-studio.git
+git clone https://github.com/JAY0001-gla/modelforge-studio.git
 cd modelforge-studio
 ```
 
-Or use GitHub's **Code → Download ZIP** option, then extract the archive and open a terminal in the extracted project directory.
+### Option B — Download ZIP
 
-Replace `YOUR-USERNAME` with the GitHub account that owns the repository.
+1. Open the GitHub repository.
+2. Click **Code**.
+3. Select **Download ZIP**.
+4. Extract the downloaded ZIP.
+5. Open a terminal in the extracted `modelforge-studio` folder.
 
-### 2. Create a virtual environment
+### Create a virtual environment
+
+A virtual environment keeps this project's dependencies separate from other Python projects.
 
 **Windows PowerShell:**
 
@@ -397,7 +658,7 @@ py -3.11 -m venv .venv
 .\.venv\Scripts\Activate.ps1
 ```
 
-If PowerShell blocks activation, use Command Prompt:
+If PowerShell does not allow activation, use Command Prompt:
 
 ```bat
 .venv\Scripts\activate.bat
@@ -410,248 +671,117 @@ python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-### 3. Install dependencies
+### Install the dependencies
+
+With the virtual environment activated, run:
 
 ```bash
 python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### 4. Start the application
+### Run ModelForge Studio
 
 ```bash
 streamlit run app.py
 ```
 
-Streamlit will print a local address, normally:
+The terminal will display a local address. Open:
 
 ```text
 http://localhost:8501
 ```
 
-Open that address in your browser.
+The application runs in your browser while the Streamlit process remains active in the terminal.
 
-### 5. Stop the application
+### Stop the application
 
-In the terminal where Streamlit is running, press:
+Press `Ctrl + C` in the terminal where Streamlit is running.
 
-```text
-Ctrl + C
-```
+### Run without Git
+
+If you downloaded the ZIP, you do not need Git to run the app. Extract it, open a terminal in the project folder, create/activate the virtual environment, install requirements and run Streamlit as described above.
 
 ---
 
-## Deploy on Streamlit Community Cloud
+## 14. Deploy on Streamlit Community Cloud
 
-The app can be deployed from a GitHub repository using Streamlit Community Cloud.
+ModelForge Studio can be deployed from its GitHub repository using Streamlit Community Cloud.
 
 1. Push the complete project to GitHub.
-2. Make sure `app.py` and `requirements.txt` are in the repository root.
-3. Make sure `model.pkl` is included if you want the bundled pre-trained model.
-4. Keep `.streamlit/config.toml` in the root-level `.streamlit` directory.
-5. Sign in to Streamlit Community Cloud with GitHub.
-6. Choose to create a new app.
-7. Select the repository, branch and `app.py` as the app's main file.
-8. Deploy and wait for dependency installation and startup.
-9. Open the generated app URL and test the pages.
+2. Confirm that `app.py` and `requirements.txt` are in the repository root.
+3. Confirm that `core.py`, `theme.py` and `model.pkl` are committed.
+4. Confirm that `.streamlit/config.toml` is in the root-level `.streamlit` folder.
+5. Sign in to Streamlit Community Cloud using GitHub.
+6. Choose **Create app**.
+7. Select this repository, the `main` branch and `app.py` as the main file.
+8. Deploy the application.
+9. Wait for package installation and app startup.
+10. Open the generated Streamlit app URL and test the pages.
 
-Official deployment guide:  
+Official guide:  
 https://docs.streamlit.io/deploy/streamlit-community-cloud/deploy-your-app
 
-If deployment fails, inspect the app logs. Dependency versions, missing files, incorrect paths and incompatible model artefacts are common causes.
+If deployment fails, check the deployment logs for missing modules, incorrect file paths, dependency conflicts or model-loading errors.
 
 ---
 
-## How the code is organised
+## 15. Configuration
 
-### `app.py` — application layer
+The project uses `.streamlit/config.toml` for Streamlit configuration.
 
-This file contains the Streamlit application.
+Current settings include:
 
-Responsibilities include:
+- Light theme.
+- Primary colour: `#2A5BD7`.
+- Page background: `#F4F7FB`.
+- Secondary background: `#FFFFFF`.
+- Text colour: `#1F2A3C`.
+- Minimal toolbar mode.
+- Maximum upload size: 200 MB.
+- Browser usage statistics collection disabled.
 
-- Page configuration and navigation.
-- Sidebar and active-model selection.
-- Streamlit session-state management.
-- Dataset upload controls.
-- Training settings and button actions.
-- Calling functions from `core.py`.
-- Displaying charts, tables, metrics, forms and downloads.
-- Rendering the eight application pages.
+If you change the theme or upload limit, edit `.streamlit/config.toml` and restart the application.
 
-The main page functions are:
-
-| Function | Purpose |
-|---|---|
-| `page_forecast()` | Weather-specific demonstration workflow |
-| `page_train()` | Dataset selection, preparation controls and model training |
-| `page_analytics()` | Model metrics, external evaluation and cross-validation |
-| `page_tree()` | Tree diagram, feature importance and rules |
-| `page_predict()` | Single-row prediction and decision path |
-| `page_hub()` | Model import/export and compatibility information |
-| `page_explore()` | Dataset charts and exploratory views |
-| `page_report()` | Downloadable model report |
-
-### `core.py` — machine-learning layer
-
-This file keeps the principal data and model operations separate from the Streamlit interface.
-
-Key functions include:
-
-| Function | Purpose |
-|---|---|
-| `sample_weather_df()` | Creates the built-in synthetic sample weather dataset |
-| `detect_task()` | Infers classification or regression from the target |
-| `prepare_dataset()` | Selects columns, removes incomplete rows, encodes features and splits data |
-| `fit_bundle()` | Fits a decision-tree classifier or regressor and builds model metadata |
-| `load_model_file()` | Loads a trusted pickle/joblib decision-tree model |
-| `bundle_from_model()` | Creates the app's metadata bundle around an imported model |
-| `attach_evaluation()` | Attaches user-supplied labelled evaluation data |
-| `evaluate()` | Calculates task-specific evaluation metrics |
-| `depth_sweep()` | Trains trees at different depths for comparison |
-| `recommend_depth()` | Suggests a depth from the depth-sweep results |
-| `cv_report()` | Runs cross-validation when the required training data is available |
-| `tree_profile()` | Calculates structural information about the decision tree |
-| `leaf_info()` | Gets information about the leaf reached by an input |
-| `decision_path_rows()` | Converts a prediction's tree path into readable rows |
-| `tree_figure()` | Builds a visual decision-tree diagram |
-| `model_bytes()` | Serialises a model for download |
-| `model_card()` | Builds structured metadata for a model |
-| `build_report()` | Creates a Markdown model report |
-| `card_json()` | Converts a model card to formatted JSON |
-
-### `theme.py` — presentation layer
-
-This file contains the app's visual system and reusable presentation helpers.
-
-It defines:
-
-- Colour palette and Plotly colour scales.
-- CSS injected into the Streamlit application.
-- Responsive widget-width helpers.
-- HTML escaping and rendering helpers.
-- Page headers, metric strips, hero panels and advisory rows.
-- Plotly chart theme configuration.
-
-Keeping these helpers in a separate file makes the interface easier to maintain.
-
-### `model.pkl` — bundled model artefact
-
-This is the serialised demonstration decision tree loaded by the application. It is a binary model file, not source code. It must be kept in the expected location and loaded with a compatible scikit-learn environment.
-
-### `requirements.txt` — dependencies
-
-This file tells pip which Python packages and versions/ranges the application needs.
+The upload limit is a maximum accepted file size, not a promise that very large CSV files will fit in the available memory or train quickly.
 
 ---
 
-## Model import and export
+## 16. Limitations and current scope
 
-### Export
+ModelForge Studio is an early-stage project. The following boundaries describe the current implementation:
 
-In Model Hub, the active model can be downloaded in two forms:
+1. **Decision-tree training:** Train Studio currently trains scikit-learn decision-tree classifiers and regressors.
+2. **Tabular datasets:** The training workflow is designed for CSV data, not images, audio, video or document datasets.
+3. **Supported model imports:** Model Hub accepts supported scikit-learn decision-tree classifier and regressor objects, not arbitrary ML models.
+4. **Preprocessing portability:** Exporting the estimator does not automatically package every cleaning and encoding operation as a complete reusable preprocessing pipeline.
+5. **Session-based work:** Newly trained or imported models and working datasets are managed in the Streamlit session. Export artefacts you want to keep.
+6. **No account system:** There are no user accounts, teams, access controls or shared workspaces.
+7. **No persistent model registry:** The application does not provide a database-backed library of every model a user has trained.
+8. **No hosted inference API:** Exporting a model does not automatically deploy it as a production API.
+9. **In-memory CSV processing:** Large datasets can consume significant memory.
+10. **Weather model validation:** The bundled model is a demonstration artefact. Its data provenance and real-world performance must be independently verified before operational use.
+11. **Metrics are not guarantees:** A high score on one split does not prove that a model is reliable on future data.
 
-**1. Pickle/joblib model (`.pkl`)**
-
-Contains the serialised scikit-learn decision-tree estimator. It is intended for reuse in a compatible Python/scikit-learn environment.
-
-**2. JSON model card (`.json`)**
-
-Contains readable metadata such as:
-
-- Model source and creation time.
-- scikit-learn version.
-- Task and target.
-- Raw feature names.
-- Class names, where applicable.
-- Numeric feature ranges.
-- Categorical feature values.
-- Supported hyperparameter values.
-- Tree depth, leaf count and training-row count.
-- Selected evaluation metrics, when available.
-
-The model card is descriptive metadata; it is not itself a model that can make predictions.
-
-### Import
-
-The current Model Hub accepts `.pkl` and `.joblib` files that contain a scikit-learn `DecisionTreeClassifier` or `DecisionTreeRegressor`.
-
-The current importer does **not** provide universal support for:
-
-- Arbitrary scikit-learn estimators.
-- Complete scikit-learn preprocessing pipelines.
-- TensorFlow or Keras models.
-- PyTorch models.
-- XGBoost, LightGBM or CatBoost models.
-- ONNX models.
-- Models that require custom Python classes or unavailable dependencies.
-
-An imported estimator may not include its original training data, evaluation split, feature preprocessing metadata or original feature semantics. Supply compatible inputs and independent labelled evaluation data before relying on its predictions.
+The project can be extended with more algorithms, complete preprocessing pipelines, experiment tracking, persistent storage, user workspaces and model-serving features in future versions. Those are future directions, not claims about the current release.
 
 ---
 
-## Evaluation metrics
+## 17. Security and responsible use
 
-The metrics depend on the selected task.
-
-### Regression
-
-| Metric | Meaning |
-|---|---|
-| R² | Proportion of target variance explained relative to a baseline |
-| RMSE | Root mean squared error; penalises larger errors more strongly |
-| MAE | Mean absolute error |
-| Median absolute error | Median of absolute prediction errors |
-
-An R² value can be negative when the model performs worse than a simple mean-prediction baseline on the evaluation data. Error metrics are expressed in the target's units.
-
-### Classification
-
-| Metric | Meaning |
-|---|---|
-| Accuracy | Fraction of predictions that are correct |
-| Precision (weighted) | Weighted average of class-level precision |
-| Recall (weighted) | Weighted average of class-level recall |
-| F1 (weighted) | Weighted average of class-level F1 scores |
-| Confusion matrix | Counts of actual versus predicted classes |
-| ROC AUC | Area under the ROC curve when the applicable binary-classification probabilities are available |
-
-### Cross-validation
-
-The analytics page can run five-fold cross-validation for a model trained in the current session, using the stored training dataset. Cross-validation is not available for an imported model when its original training data is absent.
+- **Only load trusted `.pkl` and `.joblib` files.** These formats can execute arbitrary code during deserialisation. Never import a model file from an unknown or untrusted source.
+- Do not commit API keys, passwords, tokens, private certificates or other secrets to a public repository.
+- Do not upload personal, confidential or regulated data unless you have permission and an appropriate lawful basis.
+- Review a dataset before uploading it to a hosted instance. The app processes uploaded data in memory.
+- Check dataset provenance, feature definitions, units, quality and potential bias.
+- Keep training and final evaluation data separate.
+- Avoid target leakage: do not use inputs that reveal the answer or would not be available at prediction time.
+- Do not use this prototype as the sole basis for medical, financial, legal, employment, safety-critical or other high-impact decisions.
+- Review dependency updates and security advisories before public deployment.
 
 ---
 
-## Important limitations
-
-ModelForge Studio is a prototype and has several deliberate scope boundaries:
-
-1. **Decision trees only:** Training currently uses scikit-learn decision-tree classifier and regressor models.
-2. **Tabular CSV data:** The user-facing training workflow is designed for CSV datasets, not images, audio, video or unstructured documents.
-3. **In-memory workflow:** Uploaded data and newly trained models are handled in the current Streamlit session. There is no database-backed user account or permanent model registry.
-4. **Session persistence:** A model trained or imported during a session should be exported if it needs to be kept. Do not assume it will remain available in a later session.
-5. **No multi-user workspace:** The app does not currently provide authentication, teams, project permissions or shared workspaces.
-6. **No automatic deployment of user models:** Exporting a model does not publish it as a production prediction API.
-7. **No arbitrary model support:** The importer is limited to scikit-learn decision-tree classifier/regressor objects.
-8. **Preprocessing portability:** An exported estimator does not automatically package every data-cleaning and preprocessing step used before training.
-9. **Weather prototype validation:** The included weather model's scientific suitability and real-world predictive performance must be independently verified before operational use.
-10. **No production guarantees:** Metrics and warnings are exploratory aids, not guarantees of model quality, fairness, reliability or safety.
-
----
-
-## Security and responsible use
-
-- **Treat pickle/joblib files as executable content.** Loading an untrusted pickle or joblib file can execute arbitrary code. Only import files from sources you trust.
-- Do not upload passwords, API keys, private datasets or other secrets to a public GitHub repository.
-- Review uploaded data before sharing it. Remove personal, confidential or regulated information unless you have permission and a lawful basis to use it.
-- Validate the origin, meaning, units and quality of all training and evaluation data.
-- Keep training, validation and test data appropriately separated. Do not evaluate a model on data it has already memorised and then describe the result as independent performance.
-- Do not use a prototype prediction as the sole basis for medical, financial, legal, safety-critical, agricultural or other high-impact decisions.
-- Keep dependencies updated and review security advisories before deploying the app publicly.
-
----
-
-## Troubleshooting
+## 18. Troubleshooting
 
 ### `streamlit` is not recognised
 
@@ -664,7 +794,7 @@ python -m streamlit run app.py
 
 ### `ModuleNotFoundError`
 
-Make sure the virtual environment is activated and run:
+Make sure the correct virtual environment is active, then run:
 
 ```bash
 pip install -r requirements.txt
@@ -672,89 +802,102 @@ pip install -r requirements.txt
 
 ### The pre-trained model cannot be loaded
 
-- Confirm `model.pkl` exists in the same directory as `app.py`, or in the supported `models/` subdirectory.
+- Confirm `model.pkl` is next to `app.py`, or in `models/model.pkl`.
 - Install the pinned dependencies from `requirements.txt`.
-- Check the terminal or Streamlit logs for the loading error.
-- If the model file is missing or incompatible, the application may fall back to a synthetic demonstration model.
+- Check the terminal or Streamlit logs for the underlying error.
+- If the model is missing or incompatible, the app may use its synthetic fallback demonstration model.
 
-### Model version warning
+### scikit-learn version warning
 
-The bundled model was saved with scikit-learn 1.6.1. Use the pinned dependency in `requirements.txt` when possible. scikit-learn does not guarantee that persisted models are compatible across versions.
+The bundled model was saved with scikit-learn 1.6.1. Keep `scikit-learn==1.6.1` from `requirements.txt` when possible. Scikit-learn does not guarantee persisted-model compatibility across versions.
 
-### CSV upload or training fails
+### CSV upload fails
+
+- Confirm the file is a valid `.csv`.
+- Check that the file has a header row.
+- Check for malformed rows, unusual encodings or delimiter issues.
+- Try saving the dataset as UTF-8 CSV from your spreadsheet application.
+- Confirm the file size is within the configured upload limit.
+
+### Training fails
 
 Check that:
 
-- The file is a valid CSV with a header row.
-- The selected target column exists and contains usable values.
-- At least one feature is selected.
-- At least 30 complete rows remain after missing rows are removed.
+- A target column is selected.
+- At least one input feature is selected.
+- At least 30 usable rows remain after required rows are removed.
+- The target values are suitable for the selected task.
 - Regression targets are numeric.
-- A classification target has at least two classes.
-- The selected feature columns contain suitable values.
+- Classification has enough examples in its classes for the selected split.
+- The dataset does not contain unexpected or unsupported values.
 
-### Streamlit deployment fails
+### Imported model fails
+
+- Confirm that the file is a trusted `.pkl` or `.joblib`.
+- Confirm that it contains a scikit-learn `DecisionTreeClassifier` or `DecisionTreeRegressor`.
+- Check the scikit-learn version used to save it.
+- Remember that a raw estimator may not include its original preprocessing pipeline.
+
+### Streamlit Community Cloud deployment fails
 
 Check the deployment logs and verify:
 
-- The app entry point is `app.py`.
-- `requirements.txt` is in the repository root.
-- All Python modules imported by `app.py` are committed.
-- `model.pkl` is present if the bundled model is required.
-- `.streamlit/config.toml` is in the correct directory.
-- The repository contains no accidental local paths or uncommitted files.
+- The entry point is `app.py`.
+- `requirements.txt` is at the repository root.
+- `core.py` and `theme.py` are committed.
+- `model.pkl` is committed if you want the bundled model.
+- `.streamlit/config.toml` is in the correct root-level folder.
+- No local-only file paths or uncommitted dependencies are required.
 
 ---
 
-## Development and contribution
+## 19. Development and contribution
 
-Contributions, bug reports and suggestions are welcome.
+Suggestions, bug reports and contributions are welcome.
 
-A useful contribution workflow:
+A typical contribution workflow:
 
 1. Fork the repository.
 2. Create a feature branch.
 3. Make a focused change.
-4. Test the application locally.
-5. Check that the existing pages and bundled model still work.
-6. Submit a pull request explaining the change and how it was tested.
+4. Install dependencies in a virtual environment.
+5. Run the app locally.
+6. Test the affected workflow and check that existing pages still work.
+7. Submit a pull request describing the change and how it was tested.
 
-Before contributing, consider whether a change affects:
+When modifying the code, consider the interaction between:
 
-- CSV preparation and feature encoding.
+- Dataset preparation and feature encoding.
 - Model bundle metadata.
 - Prediction input handling.
 - Model import/export compatibility.
 - Streamlit session state.
 - Dependency versions.
-- Documentation and deployment instructions.
+- Documentation and deployment configuration.
 
-### Suggested future development directions
+### Possible future improvements
 
-These are possible future enhancements, not features currently implemented:
+These are ideas for future development and are not part of the current implementation:
 
-- Add more supported algorithms.
-- Support complete preprocessing pipelines during model export/import.
-- Add persistent model and dataset storage.
-- Add experiment history and model comparison.
-- Add downloadable training datasets and reproducible experiment metadata.
-- Add automated tests and continuous integration.
-- Add authentication and multi-user project workspaces.
-- Add model-serving APIs and deployment workflows.
-- Add fairness, explainability and data-quality checks.
+- Additional algorithms such as random forests, gradient boosting and other supervised models.
+- Reusable preprocessing pipelines for import and export.
+- Experiment history and model comparison.
+- Persistent datasets and model storage.
+- User accounts and collaborative workspaces.
+- Automated tests and continuous integration.
+- Model-serving APIs and deployment workflows.
+- Additional explainability, data-quality and fairness tools.
 
 ---
 
-## License
+## 20. License
 
-No open-source license has been selected for this repository yet.
-
-Until a license is added, do not assume that others have permission to redistribute, modify or commercially use the code. If you intend to publish the project as open source, choose a license and add its full text in a `LICENSE` file.
+This project is distributed under the **MIT License**. See the [`LICENSE`](LICENSE) file for the full license text.
 
 ---
 
 ## Acknowledgements
 
-ModelForge Studio is built with the Python open-source ecosystem, especially Streamlit, scikit-learn, pandas, NumPy, Plotly and joblib.
+Built with the Python open-source ecosystem, including Streamlit, scikit-learn, pandas, NumPy, Plotly and joblib.
 
-If you use or extend this project, please retain appropriate notices and follow the licenses of the dependencies and any datasets or model artefacts you include.
+If you use, modify or extend this project, follow the MIT License and the licences and notices of the third-party libraries and datasets you use.
