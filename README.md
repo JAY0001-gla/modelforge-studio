@@ -683,7 +683,7 @@ pip install -r requirements.txt
 ### Run ModelForge Studio
 
 ```bash
-streamlit run app.py
+python -m streamlit run app.py
 ```
 
 The terminal will display a local address. Open:
