@@ -1,0 +1,16 @@
+[theme]
+base = "light"
+primaryColor = "#2A5BD7"
+backgroundColor = "#F4F7FB"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#1F2A3C"
+
+[client]
+# Hides the extra toolbar items so the fixed header bar stays slim and never crowds the page title
+toolbarMode = "minimal"
+
+[server]
+maxUploadSize = 200
+
+[browser]
+gatherUsageStats = false
