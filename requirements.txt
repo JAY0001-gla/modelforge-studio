@@ -1,0 +1,7 @@
+streamlit>=1.40
+# model.pkl was saved with scikit-learn 1.6.1; keep pinned so it loads without warnings
+scikit-learn==1.6.1
+pandas>=2.0
+numpy>=1.26
+plotly>=5.20
+joblib>=1.3
